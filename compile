@@ -1,0 +1,27 @@
+mkdir build > /dev/null 2>&1
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+echo "-- building client --"
+gcc src/client/client.c -o build/client
+
+if [ $? -eq 0 ]; then
+	echo "${GREEN}success.${NC}"
+	echo ""
+else
+	echo "${RED}failed.${NC}"
+	exit
+fi
+
+echo "-- building server --"
+gcc src/server/server.c -o build/server
+
+if [ $? -eq 0 ]; then
+	echo "${GREEN}success.${NC}"
+	echo ""
+else
+	echo "${RED}failed.${NC}"
+	exit
+fi

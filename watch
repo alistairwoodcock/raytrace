@@ -1,0 +1,3 @@
+#this requires watchman https://facebook.github.io/watchman/docs/watchman-make.html
+
+watchman-make -p '**/*.c' '**/*.h' --run ./compile
