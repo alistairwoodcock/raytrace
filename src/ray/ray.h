@@ -6,17 +6,44 @@
 		queue additional rays —— return generated rays, have current ray as parent
 
 */
+#ifndef ALS_RAY
+#define ALS_RAY
+
+#include "../shared/utils.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 
-typedef enum { false, true } bool;
+struct Vector{
+	float x,y,z; 
+};
+
+struct Position{
+	float x,y,z;
+};
+
+struct Rotation{
+	float x,y,z;
+};
+
+struct Color{
+	float r,g,b;
+};
+
+struct Transform{
+	struct Position position;
+	struct Rotation rotation;
+};
+
+struct Ray{
+	struct Position origin;
+	struct Vector direction;
+};
 
 enum Types{
 	EMPTY,
-
 	SPHERE,
 	CUBEOID
 };
@@ -30,18 +57,13 @@ struct Entity{
 	int child_limit;
 	struct Entity** children; //pointer to children array (ref by pointers)
 	
-
-	float x,y,z; //position relative to parent
-	float x_rot, y_rot, z_rot; //rotation relative to parent
+	struct Transform transform; //transform relative to parent
 };
 
-struct Ray{
-	float x,y,z;
+struct Sphere{
+	float radius;
 };
 
-struct Color{
-	char r,g,b;
-};
 
 // struct ray{
 // 	bool (*setup)(char*);
@@ -50,3 +72,5 @@ struct Color{
 // };
 
 // extern const struct ray Ray;
+
+#endif
