@@ -30,4 +30,16 @@ else
 	exit
 fi
 
+
+echo "building ray:"
+gcc src/ray/ray.c -o build/ray
+
+if [ $? -eq 0 ]; then
+	echo -e "${GREEN}success.${NC}"
+else
+	echo -e "${RED}failed.${NC}"
+	echo ""
+	exit
+fi
+
 echo ""
