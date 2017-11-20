@@ -38,6 +38,9 @@ struct Transform{
 };
 
 struct Ray{
+	int id;
+	int parent;
+	int life;
 	struct Position origin;
 	struct Vector direction;
 };
@@ -62,6 +65,7 @@ struct Entity{
 
 struct Sphere{
 	float radius;
+	struct Color color;
 };
 
 

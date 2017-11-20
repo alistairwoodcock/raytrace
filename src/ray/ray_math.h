@@ -1,6 +1,10 @@
 #include <math.h>
 #include "ray.h"
 
+float rand2(){
+    return (float)rand() / (float)RAND_MAX;
+}
+
 struct Vector vec_sub(struct Vector v, struct Vector u){
     struct Vector new_vec = {v.x-u.x, v.y-u.y, v.z-u.z};
     return new_vec;
