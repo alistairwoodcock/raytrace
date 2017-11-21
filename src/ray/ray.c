@@ -8,7 +8,7 @@
 struct Entity* world; //top level world entity containing all others
 
 struct Entity** entities;
-int entities_max = 64;
+int entities_max = 4;
 
 struct Ray** rays;
 int rays_max = 500;
@@ -273,17 +273,17 @@ float sphere_hit(struct Entity* entity, struct Ray* ray){
 	float radius = sphere_data->radius;
 
 	// analytic solution
-	struct Vector orig = {ray->origin.x,ray->origin.y,ray->origin.z};
+	struct Vector orig = pos_to_vec(ray->origin);
 	struct Position world_pos = entity_to_world_space(entity);
-	struct Vector center = {world_pos.x,world_pos.y,world_pos.z};
-	struct Vector dir = {ray->direction.x,ray->direction.y,ray->direction.z};
+	struct Vector center = pos_to_vec(world_pos);
+	struct Vector dir = ray->direction;
 
 	float t0, t1; // solutions for t if the ray intersects 
     
     struct Vector L = vec_sub(orig, center); 
-    float a = dot_product(dir, dir); 
-    float b = 2 * dot_product(dir, L);
-    float c = dot_product(L, L) - (radius*radius); 
+    float a = vec_dot(dir, dir); 
+    float b = 2 * vec_dot(dir, L);
+    float c = vec_dot(L, L) - (radius*radius); 
     if (!solve_quadratic(a, b, c, &t0, &t1)) return -1; 
 
 
@@ -297,7 +297,7 @@ float sphere_hit(struct Entity* entity, struct Ray* ray){
     return t0; 
 }
 
-struct Color sphere_color(struct Entity* entity, struct Ray* ray){
+struct Color sphere_color(struct Entity* entity){
 	struct Color c;
 
 	struct Sphere* sphere_data = (struct Sphere*)entity->type_data;
@@ -314,8 +314,8 @@ bool cubeoid_hit(struct Entity* entity, struct Ray* ray){
 	return -1;
 }
 
-struct Color cubeoid_color(struct Entity* entity, struct Ray* ray){
-	struct Color c;
+struct Color cubeoid_color(struct Entity* entity){
+	struct Color c = {0};
 
 	
 
@@ -329,55 +329,21 @@ struct Color cubeoid_color(struct Entity* entity, struct Ray* ray){
 
 void create_reflected_ray(struct Entity* e, struct Ray* ray){
 
-
-
 }
 
 void create_refracted_ray(struct Entity* e, struct Ray* ray){
 	//TODO(AL): Lets make this a thing once we have entities with material types
 }
 
-struct Color render_recurse(struct Entity* e, struct Ray* ray, float* max_dist){
-	struct Color c = {-1,0,0};
+struct Color trace(struct Ray* ray){
 	
-	float hit = -1;
-
-	switch(e->type)
-	{
-		case SPHERE:
-			hit = sphere_hit(e, ray);
-			
-			if(hit >= 0 && hit < *max_dist){
-				c = sphere_color(e, ray);	
-				*max_dist = hit;
-			}
-			
-		break;
-
-		case CUBEOID: 
-			// hit = cubeoid_hit(e, ray);
-			// if(hit >= 0) c = cubeoid_color(e, ray);
-
-		break;
-
-		case EMPTY: 
-		default:
-			hit = -1;
-	}
-
-	for(int i = 0; i < e->child_count; i++)
-	{
-		struct Color tmp_c = render_recurse(e->children[i], ray, max_dist);
-		if(tmp_c.r >= 0) c = tmp_c;
-	}
+	float min_dist = MAX_WORLD_DIST;
 	
-	return c;
-}
+	struct Color c = background;
 
-struct Color render_loop(struct Ray* ray, float* max_dist){
-	struct Color c = {-1,0,0};
+	// float hit = -1;
 
-	float hit = -1;
+	struct Entity* hit_e = NULL;
 
 	for(int i = 0; i < entities_max; i++)
 	{
@@ -385,61 +351,79 @@ struct Color render_loop(struct Ray* ray, float* max_dist){
 
 		if(e == NULL) continue;
 
-		float hit = -1;
-
 		switch(e->type)
 		{
-			case SPHERE:
-				hit = sphere_hit(e, ray);
+			case SPHERE: {
+				float h = sphere_hit(e, ray);
 				
-				if(hit >= 0 && hit < *max_dist){
-					c = sphere_color(e, ray);	
-					
-					create_reflected_ray(e, ray);
-					create_refracted_ray(e, ray);
-
-					*max_dist = hit;
+				if(h >= 0 && h < min_dist){
+					hit_e = e;
+					min_dist = h;
 				}
-				
-			break;
+			} break;
 
-			case CUBEOID: 
-			break;
+			case CUBEOID: {
 
-			case EMPTY: 
-			break;
+			} break;
+
+			case EMPTY: {
+
+			} break;
 		}
 	}
 
+	if(min_dist == MAX_WORLD_DIST){
+		return c;
+	}
 
-	return c;
-}
+	struct Color surface_color;
 
-struct Color render(struct Ray* ray){
-	
-	float max_dist = MAX_WORLD_DIST;
-	
-	// struct Color ray_c = render_recurse(world, ray, &max_dist);
-	struct Color ray_c = render_loop(ray, &max_dist);
-
-	float dist_percent = max_dist/MAX_WORLD_DIST;
-
-	struct Color c = {
-		(ray_c.r*0.8) + (ambient.r*0.2), 
-		(ray_c.g*0.8) + (ambient.r*0.2), 
-		(ray_c.b*0.8) + (ambient.b*0.2)
-	};
-
-	if(max_dist == MAX_WORLD_DIST)
+	switch(hit_e->type)
 	{
-		c = background;
+		case SPHERE: {
+			surface_color = sphere_color(hit_e); 
+		} break;
+
+		case CUBEOID: {
+			surface_color = cubeoid_color(hit_e);
+		} break;
+
+		case EMPTY: {
+
+		} break;
+	}
+
+					
+	struct Vector hit_vec = vec_mult_scalar(ray->direction, min_dist);
+	struct Vector hit_pos = vec_add(hit_vec, pos_to_vec(ray->origin));
+	
+	struct Vector hit_normal = vec_sub(hit_pos, pos_to_vec(hit_e->transform.position));
+	vec_normalize(&hit_normal);
+
+	float dir_normal_dot = vec_dot(ray->direction, hit_normal);
+	
+	struct Ray reflected_ray;
+	reflected_ray.origin = vec_to_pos(vec_add(hit_pos, hit_normal));
+	reflected_ray.direction = vec_sub(ray->direction, vec_mult_scalar(hit_normal, 2*dir_normal_dot));
+	reflected_ray.life = ray->life-1;
+	vec_normalize(&reflected_ray.direction);
+
+
+	if(reflected_ray.life > 0)
+	{
+		struct Color reflected_color = trace(&reflected_ray);
+
+		float facingratio = -vec_dot(ray->direction, hit_normal); 
+		float fresneleffect = mix(pow(1 - facingratio, 3), 1, 0.1); 
+
+		struct Vector reflection_c = color_to_vec(reflected_color);
+		struct Vector sphere_c = color_to_vec(surface_color);
+
+		c = vec_to_color(vec_mult_vec(vec_mult_scalar(reflection_c, fresneleffect), sphere_c));
 	}
 	else
 	{
-		// struct Vector light_normal = {0,0,1};
-		// struct Vector ray_vec = ray->direction;
-
-		// printf("dot: %f\n", dot_product(light_normal, ray_vec));
+		c = surface_color;
 	}
 
 	return c;
@@ -457,32 +441,50 @@ bool setup(char* scene_descriptor_fil){
 	//			allocate memory to read file in 
 	//			parse scene into game state
 
+	ambient.r = 0.8;
+	ambient.g = 0.2;
+	ambient.b = 0.5;
+
+	background.r = 0.9;
+	background.g = 0.3;
+	background.b = 0.5;
+
 	world = create_entity(EMPTY);
 
 	if(world == NULL) return false;
 
 	struct Entity* prev = world;
 
-	for(int i = 0; i < 20; i++)
-	{
-		struct Color c = {rand2(), rand2(), rand2()};
-		struct Entity* sphere = create_sphere(4.0, c);
+	struct Color c1 = {0, 1, 0};
+	struct Entity* sphere1 = create_sphere(4.0, c1);
+	sphere1->transform.position.x = 5;
+	sphere1->transform.position.y = 0;
+	sphere1->transform.position.z = 40;
+	add_child(world, sphere1);
+
+
+	struct Color c2 = {0, 0, 1};
+	struct Entity* sphere2 = create_sphere(4.0, c2);
+	sphere2->transform.position.x = -5;
+	sphere2->transform.position.y = 0;
+	sphere2->transform.position.z = 30;
+	add_child(world, sphere2);
+
+	// for(int i = 0; i < 20; i++)
+	// {
+	// 	struct Color c = {rand2(), rand2(), rand2()};
+	// 	struct Entity* sphere = create_sphere(4.0, c);
 		
-		if(sphere != NULL)
-		{
-			struct Position pos = {i*4,0,30+4*i};
-			sphere->transform.position = pos;
+	// 	if(sphere != NULL)
+	// 	{
+	// 		struct Position pos = {i*4,0,30+4*i};
+	// 		sphere->transform.position = pos;
 
-			bool added = add_child(prev, sphere);
-		}
+	// 		bool added = add_child(prev, sphere);
+	// 	}
 
-	}
+	// }
 
-	struct Color amb = {0.8,0.2,0.5};
-	ambient = amb;
-
-	struct Color bg = {0.9,0.3,0.5};
-	background = bg;
 
 	return true;
 }
@@ -516,7 +518,7 @@ int main(void){
 #if 1
 	setup(NULL);
 
-	int rays_per_pix = 5;
+	int rays_per_pix = 10;
 
 	int width = 1920;
 	int height = 1080;
@@ -553,10 +555,8 @@ int main(void){
 	            direction.z = 1;
 	            vec_normalize(&direction);
 
-	            // create_ray(origin, direction, 5);
-
-				struct Ray r = {0,0,0,origin, direction};
-				struct Color ray_color = render(&r);	
+	            struct Ray r = {0,0,2,origin, direction};
+				struct Color ray_color = trace(&r);	
 
 				c.r += ray_color.r / (float)rays_per_pix;
 				c.g += ray_color.g / (float)rays_per_pix;

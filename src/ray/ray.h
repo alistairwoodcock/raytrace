@@ -68,6 +68,9 @@ struct Sphere{
 	struct Color color;
 };
 
+struct Color trace(struct Ray* ray);
+bool setup(char* scene_descriptor_fil);
+void destroy();
 
 // struct ray{
 // 	bool (*setup)(char*);
