@@ -10,6 +10,7 @@
 #define ALS_RAY
 
 #include "../shared/utils.h"
+#include "../shared/array.h"
 
 #include <stdio.h>
 #include <stdlib.h>

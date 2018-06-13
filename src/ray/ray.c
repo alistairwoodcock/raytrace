@@ -5,9 +5,10 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../shared/stb_image_write.h"
 
+
 struct Entity* world; //top level world entity containing all others
 
-struct Entity** entities;
+struct Entity** entities; //array of entities within the scene
 int entities_max = 4;
 
 struct Ray** rays;
@@ -341,8 +342,6 @@ struct Color trace(struct Ray* ray){
 	
 	struct Color c = background;
 
-	// float hit = -1;
-
 	struct Entity* hit_e = NULL;
 
 	for(int i = 0; i < entities_max; i++)
@@ -520,8 +519,8 @@ int main(void){
 
 	int rays_per_pix = 10;
 
-	int width = 1920;
-	int height = 1080;
+	int width = 1920/4;
+	int height = 1080/4;
 	float aspect_ratio = width / (float)height; 
 	float fov = 45;
 	float scale = tan(to_radians(fov * 0.5)); 
