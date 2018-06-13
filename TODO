@@ -1,0 +1,70 @@
+TODO:
+
+	o Array library that can take any data type and store it
+		[header stuff | data ]
+					  ^-- pointer starts here
+		header stuff contains the array data like lenght and count etc
+
+	o Ray Tracing Code
+		o Move out of main and into function that can calc for a region
+		o Read in a specification of the scene 
+			o Make our own scene spec
+			o Parse Scene Spec
+			o Simple Circles and Squares
+		o Add reflection
+		o Add refraction
+		o World Space Coords and Object Relative Coords
+		o Add support for squares and other simple shapes
+		o Lights in the scene
+		o Implement KD-Tree for collision optimisation
+
+	o Logging
+		o Write a simple logging system that we can call from anywhere to write logs to
+		o Use logging in client and server code
+
+	o Configuration
+		o Try and make as much of the client and server code configurable
+		o Define a simple file that we can write and parse which takes in variables which we're interested in
+		o For the client this would include where to look for the server and what port to connect to
+		o For the server this would include the max number of clients it should try and handle
+		o Simple key value file should be fine e.g:
+			server: localhost
+			port: 9824
+			max_connections: 8
+
+	o Server Code
+		o Import and extend our threading library to allow for multiple connections
+		o Implement simple socket communication library
+		o Implement client connections and management
+		o Read a scene description and image description and send the request to the clients
+		o Implement receiving data back from the clients
+
+	o Client Code
+		o Import the finished ray tracing code
+		o Use simple socket library developed for server in client side
+		o Connecting to Server and waiting for instructions
+		o Run connection management separatly to the ray tracing code, simple message passing communication
+
+	o Testing
+		o Simple testing library, of expected and result
+		o Write some tests for socket communication
+		o Write some tests for threading library
+		o Write some tests for the server communication
+		o Write some tests for the client communication
+
+	o Valgrind
+		o Setup valgrind and start learning how to use it
+		o Run valgrind on all parts of the software
+
+	o Run on server
+		o Set up the client and server code to run on digital ocean droplets
+		o See if we can get actual networking working over the internet
+
+
+
+Expected Completion:
+
+	This is a pretty large project looking at all the compontents. 
+	I think I'd be happy if we got most of this done in 2 weeks (27/06/18)
+
+
