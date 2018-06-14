@@ -41,11 +41,12 @@ TODO:
         o Run connection management separatly to the ray tracing code, simple message passing communication
 
     o Testing
-        o Simple testing library, of expected and result
+        x Simple testing library, of expected and result
         o Write some tests for socket communication
         o Write some tests for threading library
         o Write some tests for the server communication
         o Write some tests for the client communication
+        x Write some tests for the array library
 
     o Valgrind
         o Setup valgrind and start learning how to use it
@@ -55,7 +56,7 @@ TODO:
         o Set up the client and server code to run on digital ocean droplets
         o See if we can get actual networking working over the internet
 
-    o Array library that can take any data type and store it
+    x Array library that can take any data type and store it
         [header stuff | data ]
                       ^-- pointer starts here
         header stuff contains the array data like lenght and count etc
