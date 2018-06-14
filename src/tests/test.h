@@ -9,14 +9,14 @@ int _test_count = 0;
 int _test_success_count = 0;
 
 
-#define TEST_S(name) bool name()\
+#define TEST(name)static bool name()\
 {\
 	_test_count++;\
 	bool _test_success = true;
 
-#define TEST_A(assertion) _test_success = _test_success && (assertion);
+#define ASSERT(assertion) _test_success = _test_success && (assertion);
 
-#define TEST_E if(_test_success){\
+#define END if(_test_success){\
 	_test_success_count++;\
 		printf("%s: %ssucceded%s\n", __func__, KGRN, KNRM);\
 	} else {\

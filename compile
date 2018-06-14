@@ -45,7 +45,7 @@ fi
 echo ""
 echo "${YELLOW}RUNNING TESTS${NC}"
 
-gcc src/tests/*.c -o build/tests
+gcc src/tests/*.c -Wall -o build/tests
 
 if [ $? -eq 0 ]; then
 	echo "${GREEN}built.${NC}"
