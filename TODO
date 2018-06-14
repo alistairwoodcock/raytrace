@@ -13,8 +13,8 @@ TODO:
         o Lights in the scene
         o Implement KD-Tree for collision optimisation
 
-    o Logging
-        o Write a simple logging system that we can call from anywhere to write logs to
+    x Logging
+        x Write a simple logging system that we can call from anywhere to write logs to
         o Use logging in client and server code
 
     o Configuration

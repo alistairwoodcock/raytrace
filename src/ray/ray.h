@@ -11,6 +11,7 @@
 
 #include "../shared/utils.h"
 #include "../shared/array.h"
+#include "../shared/logger.h"
 
 #include <stdio.h>
 #include <stdlib.h>

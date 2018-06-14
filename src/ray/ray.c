@@ -6,6 +6,7 @@
 #include "../shared/stb_image_write.h"
 
 
+
 struct Entity* world; //top level world entity containing all others
 
 struct Entity** entities; //array of entities within the scene
@@ -41,7 +42,7 @@ struct Entity* create_entity(enum Types type){
 
 	if(entities == NULL){
 		//create first instance of entities array
-		printf("creating first instance of entities array\n");
+		logger("info","creating first instance of entities array");
 
 		entities = malloc(sizeof(struct Entity*) * entities_max);
 		if(entities == NULL){
@@ -503,6 +504,12 @@ void destroy(){
 // };
 
 int main(void){
+	// FILE* log = fopen("./logs/ray.log", "a");
+
+	// logger_file(log);
+	// logger_stdout_print(true);
+
+	logger("info", "~~~ starting ray trace process ~~~");
 
 #if 0
 	while(true)
@@ -528,7 +535,7 @@ int main(void){
 
 	char *buff = malloc(sizeof(char) * width * height * 3);
 	if(buff == NULL){
-		printf("Cannot allocate image buff\n");
+		logger("error", "Cannot allocate image buff");
 		return 0;
 	}
 
@@ -576,9 +583,9 @@ int main(void){
 	int result = stbi_write_bmp("./image.bmp", width, height, 3, buff);
 
 	if(result == 0){
-		printf("Failed to write image to file\n");
+		logger("error","Failed to write image to file");
 	} else {
-		printf("Image written to: ./image.bmp\n");
+		logger("info","Image written to: ./image.bmp");
 	}
 #endif
 
