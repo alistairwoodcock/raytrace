@@ -15,6 +15,7 @@ TODO:
 
     x Logging
         x Write a simple logging system that we can call from anywhere to write logs to
+        x Fix logging to allow variable arguments
         o Use logging in client and server code
 
     o Configuration

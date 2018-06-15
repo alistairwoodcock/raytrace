@@ -42,20 +42,19 @@ struct Entity* create_entity(enum Types type){
 
     if(entities == NULL){
         //create first instance of entities array
-        logger("info","creating first instance of entities array");
+        logger("info", "creating first instance of entities array");
 
-        entities = malloc(sizeof(struct Entity*) * entities_max);
+        entities = a_new(struct Entity*, entities_max);
+
         if(entities == NULL){
             free(new_entity);
             return NULL;
         }
 
-        if(entities != NULL)
-        {
-            for(int i = 0; i < entities_max; i++){
-                entities[i] = NULL;
-            }
+        for(int i = 0; i < a_size(entities); i++){
+            entities[i] = NULL;
         }
+        
     }
 
     //allocate entity to entity array
@@ -73,8 +72,8 @@ struct Entity* create_entity(enum Types type){
     if(!allocated)
     {
         //all entity fields are taken so we need to allocate more memory
-        printf("Allocating new memory for entities\n");
-        printf("Max entities: %i\n", entities_max);
+        logger("info", "Allocating new memory for entities");
+        logger("info", "Max entities: %i", entities_max);
 
         struct Entity **new_entities_mem = NULL;
         int new_entities_max = (2*entities_max);
@@ -82,7 +81,7 @@ struct Entity* create_entity(enum Types type){
         new_entities_mem = malloc(sizeof(struct Entity*)*new_entities_max);
         if(new_entities_mem == NULL)
         {
-            free(entities);
+            a_free(entities);
             free(new_entity);
             return NULL;
         }
@@ -97,7 +96,7 @@ struct Entity* create_entity(enum Types type){
         new_entities_mem[entities_max] = new_entity;
         entities_max = new_entities_max;
 
-        free(entities);
+        a_free(entities);
 
         entities = new_entities_mem;
     
@@ -560,12 +559,12 @@ char* run(int width,
 // };
 
 int main(void){
-    // FILE* log = fopen("./logs/ray.log", "a");
+    FILE* log = fopen("./logs/ray.log", "a");
 
-    // logger_file(log);
-    // logger_stdout_print(true);
+    logger_file(log);
+    logger_stdout_print(true);
 
-    logger("info", "~~~ starting ray trace process ~~~");
+    logger("info", "~~~ starting ray trace process %d ~~~", 10);
 
 #if 0
     while(true)
