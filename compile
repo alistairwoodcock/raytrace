@@ -45,19 +45,27 @@ fi
 echo ""
 echo "${YELLOW}RUNNING TESTS${NC}"
 
-gcc src/tests/*.c -Wall -o build/tests
 
-if [ $? -eq 0 ]; then
-	echo "${GREEN}built.${NC}"
 
-	./build/tests
+basename=src/tests/
+for fullfile in src/tests/*.c; do
+	
+	filename=$(basename -- "$fullfile")
+	extension="${filename##*.}"
+	filename="${filename%.*}"
 
-	echo ""
+	gcc "$fullfile" -Wall -o "build/test_$filename"
 
-else
-	echo "${RED}failed.${NC}"
-	echo ""
-	exit
-fi
+	if [ $? -eq 0 ]; then
+		echo ""
+		./build/test_$filename
+		echo ""
+	else
+		exit
+	fi
+
+done
+
+# gcc src/tests/*.c -Wall -o build/tests
 
 echo ""

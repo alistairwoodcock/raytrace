@@ -19,6 +19,15 @@ void logger_stdout_print(char print){
 }
 
 void logger(char* tag, char* message, ...){
+    if(tag == null){
+        logger("error", "logger passed null tag");
+        return;
+    }
+    if(message == null){
+        logger("error", "logger passed null message");
+        return;
+    }
+
     time_t now;
     time(&now);
     FILE* out = stdout;

@@ -9,18 +9,23 @@ int _test_count = 0;
 int _test_success_count = 0;
 
 
-#define TEST(name)static bool name()\
+#define TEST(name) static bool name()\
 {\
+	printf("%s: ", __func__);\
 	_test_count++;\
 	bool _test_success = true;
 
 #define ASSERT(assertion) _test_success = _test_success && (assertion);
 
+#define FAILED(reason) printf("%sfailed%s - %s\n", KRED, KNRM, reason);\
+	_test_success = false;\
+	return _test_success;
+
 #define END if(_test_success){\
 	_test_success_count++;\
-		printf("%s: %ssucceded%s\n", __func__, KGRN, KNRM);\
+		printf("%ssucceded%s\n", KGRN, KNRM);\
 	} else {\
-		printf("%s: %sfailed%s\n", __func__, KRED, KNRM);\
+		printf("%sfailed%s\n", KRED, KNRM);\
 	}\
 	\
 	return _test_success;\

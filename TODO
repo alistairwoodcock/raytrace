@@ -12,6 +12,8 @@ TODO:
         o Add support for squares and other simple shapes
         o Lights in the scene
         o Implement KD-Tree for collision optimisation
+        o sort calcs by ray cosine similarity?
+        o Add rays back to a pool so they can be gouped and then used?
 
     x Logging
         x Write a simple logging system that we can call from anywhere to write logs to
@@ -47,6 +49,7 @@ TODO:
         o Write some tests for threading library
         o Write some tests for the server communication
         o Write some tests for the client communication
+        x Write some tests for the logging library
         x Write some tests for the array library
 
     o Valgrind
