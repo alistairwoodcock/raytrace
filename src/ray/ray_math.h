@@ -1,3 +1,6 @@
+#ifndef RAY_MATH
+#define RAY_MATH
+
 #include <math.h>
 #include "ray.h"
 
@@ -5,6 +8,11 @@ float rand2(){
     return (float)rand() / (float)RAND_MAX;
 }
 
+float clamp(float low, float high, float val){
+    if(val < low) return low;
+    if(val > high) return high;
+    return val;
+}
 
 struct Vector pos_to_vec(struct Position p){
     struct Vector v = {p.x,p.y,p.z};
@@ -78,3 +86,5 @@ bool solve_quadratic(float a, float b, float c, float *x0, float *x1){
  
     return true; 
 } 
+
+#endif

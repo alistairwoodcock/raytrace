@@ -49,10 +49,12 @@ struct Ray{
 
 enum Types{
 	EMPTY,
+	PLANE,
 	SPHERE,
 	CUBEOID
 };
 
+//TODO(AL): These should be in entities.h
 struct Entity{
 	enum Types type; //type to determine entity
 	void* type_data; //actual entity data representation
@@ -63,11 +65,29 @@ struct Entity{
 	struct Entity** children; //pointer to children array (ref by pointers)
 	
 	struct Transform transform; //transform relative to parent
+
+	float diffusion; //TODO(AL): probably move this into the specific entity type
+	float refractive_index; //TODO(AL): probably move this into the specific entity type
+	float opacity; //TODO(AL): probably move this into the specific entity type
+};
+
+struct Cubeoid{
+	float width;
+	float height;
+	float transparency; //0 - 1
+	struct Color color;
 };
 
 struct Sphere{
 	float radius;
+	float transparency; //0 - 1
 	struct Color color;
+};
+
+struct Plane{
+	float transparency; //0 - 1
+	struct Color color;
+	struct Vector normal;
 };
 
 struct Color trace(struct Ray* ray);
