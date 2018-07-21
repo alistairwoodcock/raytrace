@@ -6,17 +6,16 @@
 		queue additional rays —— return generated rays, have current ray as parent
 
 */
-#ifndef ALS_RAY
-#define ALS_RAY
+#ifndef _RAY
+#define _RAY
 
-#include "../shared/utils.h"
 #include "../shared/array.h"
+#include "../shared/utils.h"
 #include "../shared/logger.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
 
 struct Vector{
 	float x,y,z; 
@@ -45,49 +44,6 @@ struct Ray{
 	int life;
 	struct Position origin;
 	struct Vector direction;
-};
-
-enum Types{
-	EMPTY,
-	PLANE,
-	SPHERE,
-	CUBEOID
-};
-
-//TODO(AL): These should be in entities.h
-struct Entity{
-	enum Types type; //type to determine entity
-	void* type_data; //actual entity data representation
-	struct Entity* parent; //single parent
-
-	int child_count;
-	int child_limit;
-	struct Entity** children; //pointer to children array (ref by pointers)
-	
-	struct Transform transform; //transform relative to parent
-
-	float diffusion; //TODO(AL): probably move this into the specific entity type
-	float refractive_index; //TODO(AL): probably move this into the specific entity type
-	float opacity; //TODO(AL): probably move this into the specific entity type
-};
-
-struct Cubeoid{
-	float width;
-	float height;
-	float transparency; //0 - 1
-	struct Color color;
-};
-
-struct Sphere{
-	float radius;
-	float transparency; //0 - 1
-	struct Color color;
-};
-
-struct Plane{
-	float transparency; //0 - 1
-	struct Color color;
-	struct Vector normal;
 };
 
 struct Color trace(struct Ray* ray);

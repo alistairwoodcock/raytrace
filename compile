@@ -9,7 +9,7 @@ echo ""
 echo "${YELLOW}RUNNING BUILD${NC}"
 
 echo "building client:"
-gcc src/client/client.c -o build/client
+gcc -Wall src/client/client.c -o build/client
 
 if [ $? -eq 0 ]; then
 	echo "${GREEN}success.${NC}"
@@ -20,7 +20,7 @@ else
 fi
 
 echo "building server:"
-gcc src/server/server.c -o build/server
+gcc -Wall src/server/server.c -o build/server
 
 if [ $? -eq 0 ]; then
 	echo "${GREEN}success.${NC}"

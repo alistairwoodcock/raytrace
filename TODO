@@ -1,7 +1,7 @@
 TODO:
 
     o Ray Tracing Code
-        o Move out of main and into function that can calc for a region
+        x Move out of main and into function that can calc for a region
         o Read in a specification of the scene 
             o Make our own scene spec
             o Parse Scene Spec

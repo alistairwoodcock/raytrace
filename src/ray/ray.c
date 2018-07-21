@@ -4,13 +4,11 @@
 
 #include <time.h>
 
-
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../shared/stb_image_write.h"
 
-
-
 struct Entity* world; //top level world entity containing all others
+struct Entity** entities; //array of entities within the scene
 
 struct Ray** rays;
 int rays_max = 500;
@@ -20,24 +18,12 @@ struct Color background;
 
 const float MAX_WORLD_DIST = 10000.0;
 
-
-void create_reflected_ray(struct Entity* e, struct Ray* ray){
-
-}
-
-void create_refracted_ray(struct Entity* e, struct Ray* ray){
-    //TODO(AL): Lets make this a thing once we have entities with material types
-}
-
-struct Color trace(struct Ray* ray){
-    
+float hit(struct Ray* ray, struct Entity** hit_e){
     float min_dist = MAX_WORLD_DIST;
-    
-    struct Color c = background;
 
-    struct Entity* hit_e = NULL;
+    int entities_count = a_count(entities);
 
-    for(int i = 0; i < entities_max; i++)
+    for(int i = 0; i < entities_count; i++)
     {
         struct Entity* e = entities[i];
 
@@ -46,10 +32,21 @@ struct Color trace(struct Ray* ray){
         float h = entity_hit(e, ray);
 
         if(h >= 0 && h < min_dist){
-            hit_e = e;
+            *hit_e = e;
             min_dist = h;
         }
     }
+
+    return min_dist;
+}
+
+struct Color trace(struct Ray* ray){
+    
+    struct Color c = background;
+
+    struct Entity* hit_e = NULL;
+    
+    float min_dist = hit(ray, &hit_e);
 
     if(min_dist == MAX_WORLD_DIST || hit_e == NULL){
         return c;
@@ -59,100 +56,103 @@ struct Color trace(struct Ray* ray){
 
     int next_ray_life = ray->life-1;
 
-    if(next_ray_life == 0)
+    if(next_ray_life == 0) 
+        return surface_color;
+    
+
+    struct Vector hit_vec = vec_mult_scalar(ray->direction, min_dist);
+    struct Vector hit_pos = vec_add(hit_vec, pos_to_vec(ray->origin));
+    
+    struct Vector hit_normal = vec_sub(hit_pos, pos_to_vec(hit_e->transform.position));
+    vec_normalize(&hit_normal);
+
+
+    struct Ray reflected_ray;
+
+    float dir_normal_dot = vec_dot(ray->direction, hit_normal);
+    float facingratio = -vec_dot(ray->direction, hit_normal); 
+    float fresneleffect = mix(pow(1 - facingratio, 3), 1, 0.1); 
+
+    reflected_ray.origin = vec_to_pos(vec_add(hit_pos, hit_normal));
+    reflected_ray.direction = vec_sub(
+                                    ray->direction, 
+                                    vec_mult_scalar(hit_normal, 2*dir_normal_dot)
+                              );
+
+    reflected_ray.life = next_ray_life;
+    vec_normalize(&reflected_ray.direction);
+
+
+    struct Ray refracted_ray;
+    
+    float cosi = clamp(-1, 1, vec_dot(ray->direction, hit_normal));
+    float etai = 1;
+    float etat = entity_refractive_index(hit_e);
+    struct Vector n = hit_normal;
+    if(cosi < 0){ 
+        cosi = -cosi; 
+    } else {
+        float temp = etai;
+        etai = etat;
+        etat = temp;
+        n = vec_mult_scalar(hit_normal, -1);
+    }
+    
+    float eta = etai / etat;
+
+    float k = 1 - eta * eta * (1 - cosi * cosi);
+
+    if(k < 0){
+        refracted_ray.direction.x = 0;
+        refracted_ray.direction.y = 0;
+        refracted_ray.direction.z = 0;
+    } else {
+        refracted_ray.direction = vec_add(
+                                    vec_mult_scalar(ray->direction, eta),
+                                    vec_mult_scalar(hit_normal, eta * cosi - sqrtf(k))       
+                                  );    
+    }
+    
+
+    refracted_ray.origin = vec_to_pos(vec_add(hit_pos, hit_normal));
+    vec_normalize(&refracted_ray.direction);
+
+    refracted_ray.life = next_ray_life;
+
+    struct Color reflected_color = trace(&reflected_ray);
+
+    struct Vector surface_color_v = color_to_vec(surface_color);
+    struct Vector reflected_color_v = color_to_vec(reflected_color);
+
+
+    if(refracted_ray.direction.x != 0 &&
+       refracted_ray.direction.y != 0 && 
+       refracted_ray.direction.z != 0)
     {
-        c = surface_color;
+        struct Color refracted_color = trace(&refracted_ray);
+        struct Vector refracted_color_v = color_to_vec(refracted_color);
+
+        c = vec_to_color(
+                vec_add(
+                    vec_mult_scalar(surface_color_v, (1 - entity_diffusion(hit_e))),
+                    vec_mult_scalar(
+                        vec_add(
+                            vec_mult_scalar(reflected_color_v, fresneleffect),
+                            vec_mult_scalar(refracted_color_v, (1 - fresneleffect))
+                        ),
+                        entity_diffusion(hit_e)
+                    )
+                )
+            );
     }
     else
     {
-        struct Vector hit_vec = vec_mult_scalar(ray->direction, min_dist);
-        struct Vector hit_pos = vec_add(hit_vec, pos_to_vec(ray->origin));
-        
-        struct Vector hit_normal = vec_sub(hit_pos, pos_to_vec(hit_e->transform.position));
-        vec_normalize(&hit_normal);
-
-        float dir_normal_dot = vec_dot(ray->direction, hit_normal);
-
-        float facingratio = -vec_dot(ray->direction, hit_normal); 
-        float fresneleffect = mix(pow(1 - facingratio, 3), 1, 0.1); 
-
-        struct Ray reflected_ray;
-        reflected_ray.origin = vec_to_pos(vec_add(hit_pos, hit_normal));
-        reflected_ray.direction = vec_sub(
-                                        ray->direction, 
-                                        vec_mult_scalar(hit_normal, 2*dir_normal_dot)
-                                  );
-
-        reflected_ray.life = next_ray_life;
-        vec_normalize(&reflected_ray.direction);
-
-
-        struct Ray refracted_ray;
-        
-        float cosi = clamp(-1, 1, vec_dot(ray->direction, hit_normal));
-        float etai = 1;
-        float etat = entity_refractive_index(hit_e);
-        struct Vector n = hit_normal;
-        if(cosi < 0){ 
-            cosi = -cosi; 
-        } else {
-            float temp = etai;
-            etai = etat;
-            etat = temp;
-            n = vec_mult_scalar(hit_normal, -1);
-        }
-        
-        float eta = etai / etat;
-
-        float k = 1 - eta * eta * (1 - cosi * cosi);
-
-        if(k < 0){
-            refracted_ray.direction.x = 0;
-            refracted_ray.direction.y = 0;
-            refracted_ray.direction.z = 0;
-        } else {
-            refracted_ray.direction = vec_add(
-                                        vec_mult_scalar(ray->direction, eta),
-                                        vec_mult_scalar(hit_normal, eta * cosi - sqrtf(k))       
-                                      );    
-        }
-        
-
-        refracted_ray.origin = vec_to_pos(vec_add(hit_pos, hit_normal));
-        vec_normalize(&refracted_ray.direction);
-
-        refracted_ray.life = next_ray_life;
-
-        struct Color reflected_color = trace(&reflected_ray);
-
-        if(refracted_ray.direction.x != 0 &&
-           refracted_ray.direction.y != 0 && 
-           refracted_ray.direction.z != 0)
-        {
-            struct Color refracted_color = trace(&refracted_ray);
-
-            c = vec_to_color(
-                    vec_add(
-                        vec_mult_scalar(color_to_vec(surface_color), (1 - entity_diffusion(hit_e))),
-                        vec_mult_scalar(
-                            vec_add(
-                                vec_mult_scalar(color_to_vec(reflected_color), fresneleffect),
-                                vec_mult_scalar(color_to_vec(refracted_color), (1 - fresneleffect))
-                            ),
-                            entity_diffusion(hit_e)
-                        )
-                    )
-                );
-        }
-        else
-        {
-            c = vec_to_color(
-                    vec_add(
-                        vec_mult_scalar(color_to_vec(reflected_color), (1 - entity_diffusion(hit_e))),
-                        vec_mult_scalar(color_to_vec(surface_color), entity_diffusion(hit_e))
-                    )
-                );
-        }
+        c = vec_to_color(
+                vec_add(
+                    vec_mult_scalar(reflected_color_v, (1 - entity_diffusion(hit_e))),
+                    vec_mult_scalar(surface_color_v, entity_diffusion(hit_e))
+                )
+            );
     }
 
     return c;
@@ -160,6 +160,9 @@ struct Color trace(struct Ray* ray){
 
 
 bool setup(char* scene_descriptor_fil){
+
+    entities = a_new(struct Entity*, 4);
+
     ambient.r = 0.8;
     ambient.g = 0.2;
     ambient.b = 0.5;
@@ -168,18 +171,17 @@ bool setup(char* scene_descriptor_fil){
     background.g = 0.3;
     background.b = 0.5;
 
-    // background.r = 1;
-    // background.g = 1;
-    // background.b = 1;
+    a_print(entities);
+    world = create_entity(entities, EMPTY);
+    a_print(entities);
 
-    world = create_entity(EMPTY);
 
     if(world == NULL) return false;
 
     struct Entity* prev = world;
 
     struct Color c1 = {1, 0, 0};
-    struct Entity* sphere1 = create_sphere(4.0, c1);
+    struct Entity* sphere1 = create_sphere(entities, 4.0, c1);
     sphere1->transform.position.x = 7.5;
     sphere1->transform.position.y = 0;
     sphere1->transform.position.z = 20;
@@ -189,7 +191,7 @@ bool setup(char* scene_descriptor_fil){
 
 
     struct Color c2 = {0, 1, 0};
-    struct Entity* sphere2 = create_sphere(4.0, c2);
+    struct Entity* sphere2 = create_sphere(entities, 4.0, c2);
     sphere2->transform.position.x = -3.5;
     sphere2->transform.position.y = 0;
     sphere2->transform.position.z = 10;
@@ -200,7 +202,7 @@ bool setup(char* scene_descriptor_fil){
 
 
     struct Color c3 = {0, 0, 1};
-    struct Entity* sphere3 = create_sphere(4.0, c3);
+    struct Entity* sphere3 = create_sphere(entities, 4.0, c3);
     sphere3->transform.position.x = 0;
     sphere3->transform.position.y = 0;
     sphere3->transform.position.z = 17.5;
@@ -208,12 +210,13 @@ bool setup(char* scene_descriptor_fil){
     sphere3->refractive_index = 0.001;
     add_child(world, sphere3);
 
+    a_print(entities);
     return true;
 }
 
 void destroy(){
 
-    destroy_entity(world);
+    destroy_entity(entities, world);
 }
 
 char* run(int start_x,
@@ -262,7 +265,7 @@ char* run(int start_x,
                 vec_normalize(&direction);
 
                 struct Ray r = {0,0,8,origin, direction};
-                struct Color ray_color = trace(&r); 
+                struct Color ray_color = trace(&r);
 
                 c.r += ray_color.r / (float)rays_per_pix;
                 c.g += ray_color.g / (float)rays_per_pix;
@@ -279,7 +282,7 @@ char* run(int start_x,
     return buff;
 }
 
-/* END Ray Library Functions -- */
+/* -- END Ray Library Functions -- */
 
 int main(void){
     FILE* log = fopen("./logs/ray.log", "a");

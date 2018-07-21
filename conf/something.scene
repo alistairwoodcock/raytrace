@@ -1,0 +1,23 @@
+# This is an example of the structure 
+# we want for defining a scene
+# It'll need to get more complicated,
+# but lets be opening to changing the 
+# parser as needed
+#
+
+[
+    TYPE:EMPTY #we can have comments after something too
+    CHILDREN: 
+    [
+        [
+            TYPE:SPHERE
+            RADIUS:10.0
+            COLOR:#0000FF
+        ]
+        [
+            TYPE:CUBEOID
+
+        ]
+
+    ]
+]
